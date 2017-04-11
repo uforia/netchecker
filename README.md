@@ -10,6 +10,9 @@ your interest in the checked IPs.
 2) grab a list of IPs to check and put them in plaintext in a file, one per line, e.g.: "ips.txt"
 3) ./netchecker.py ips.txt
 
+# Configuration
+1) Should be only one thing: open up netchecker.py in your favourite editor and change the 'MyASN' variable's contents at the top!
+
 # Requirements  
   
 1) Python 2.7.x / 3.x (should work with both)
