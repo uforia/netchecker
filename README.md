@@ -1,7 +1,7 @@
-# netchecker
+# netchecker.py
 
 # Requirements
-netaddr module (installable through PyPi etc.)
+1) netaddr module (installable through PyPi etc.): https://pypi.python.org/pypi/netaddr
 
 # Description
 Netchecker lets you verify a list of IP addresses against known AS numbers/names.
