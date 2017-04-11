@@ -8,7 +8,7 @@
 MyASNs=('KPN B.V.',)
 #MyASNs=('AS286 ','AS1136 ','AS2043 ','AS5615 ','AS8737 ','AS12871','AS21286')
 
-### You might have to change these if MaxMind changes the naming schee
+### You might have to change the following if MaxMind changes the filename scheme
 ### Names of GeoIP CSV files, grab the ASN ZIP archives from the MaxMind website
 GeoIP='GeoIPASNum2.csv'
 GeoIPv6='GeoIPASNum2v6.csv'
