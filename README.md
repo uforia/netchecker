@@ -1,14 +1,14 @@
-# netchecker.py
-
 # Description  
   
-Netchecker lets you verify a list of IP addresses against known AS numbers/names. Works with both IPv4 and IPv6!  
+Netchecker lets you offline-check a list of IP addresses against known AS numbers/names. Works with both IPv4 and IPv6! This tool is useful
+for checking of e.g. leaked/dumped IPs against ASNs to see if there are matches, without having to internet sources and possibly announcing
+your interest in the checked IPs.
   
 # Installation  
 
-- pip install netaddr (or apt-get install python-netaddr, or whatever else your distro uses)
-- grab a list of IPs to check and put them in plaintext in a file, one per line, e.g.: "ips.txt"
-- ./netchecker.py ips.txt
+1) pip install netaddr (or apt-get install python-netaddr, or whatever else your distro uses)
+2) grab a list of IPs to check and put them in plaintext in a file, one per line, e.g.: "ips.txt"
+3) ./netchecker.py ips.txt
 
 # Requirements  
   
