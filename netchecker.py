@@ -5,10 +5,8 @@
 ### netblocks. The easiest way of preventing false matches is by adding a space or something
 ### similar at the end of the list item. Remember to add a loose 'comma' to a single entry
 ### in the tuple, to prevent it being split into individual characters.
-MyASNs=('COLT',)
+MyASNs=('KPN B.V.',)
 #MyASNs=('AS286 ','AS1136 ','AS2043 ','AS5615 ','AS8737 ','AS12871','AS21286')
-### If you simply want to list the ASNs for a bunch of IPs, uncomment the following line
-#MyASNs=('.*')
 
 ### You might have to change these if MaxMind changes the naming schee
 ### Names of GeoIP CSV files, grab the ASN ZIP archives from the MaxMind website
