@@ -10,7 +10,7 @@ the possibility of announcing your interest in the checked IPs.
 2) netaddr module (installable through PyPi etc.): https://pypi.python.org/pypi/netaddr
 3) MaxMind's GeoLite ASN databases: http://dev.maxmind.com/geoip/legacy/geolite/
   
-# Installation and usage  
+# Installation  
   
 1) git clone https://github.com/uforia/netchecker.git
 2) pip install netaddr / apt-get install python-netaddr / emerge dev-python/netaddr / or whatever you use for package management
