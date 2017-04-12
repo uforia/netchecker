@@ -6,18 +6,19 @@
 ### similar at the end of the list item. Remember to add a loose 'comma' to a single entry
 ### in the tuple, to prevent it being split into individual characters.
 MyASNs=('KPN B.V.',)
+
+### More examples:
+#MyASNs=('Level3','Qwest')
 #MyASNs=('AS286 ','AS1136 ','AS2043 ','AS5615 ','AS8737 ','AS12871','AS21286')
 
-### This product includes GeoLite data created by MaxMind, available from
-### <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
-
-### You might have to change the following if MaxMind changes the filename scheme
-### Names of GeoIP CSV files, grab the ASN ZIP archives from the MaxMind website
+### This product includes GeoLite data created by MaxMind, available from http://www.maxmind.com.
+### You might have to change the following if MaxMind changes the filename scheme.
+### Names of GeoIP CSV files, grab the ASN ZIP archives from the MaxMind website.
 GeoIP='GeoIPASNum2.csv'
 GeoIPv6='GeoIPASNum2v6.csv'
 
 ### The 'netaddr' module can be downloaded through PyPi (pip install ...) or installed
-### through your package manager of choice
+### through your package manager of choice.
 import netaddr,sys,re,csv
 
 def IntIPtoStr(integervalue):
@@ -32,7 +33,7 @@ def BuildNetblocks(MyASNs):
 			with open(GeoIPv6,'rb') as f:
 				IPv6MyASNs=tuple(csv.reader(f))
 	except IOError:
-		print("Error opening/reading ASN file(s): "+IPv4MyASNs+" or "+IPv6MyASNs+"!")
+		print("E) Error opening/reading ASN file(s): "+IPv4MyASNs+" or "+IPv6MyASNs+"!")
 		sys.exit(1)
 	netblocks=[]
 	print("1) Building the list of netblocks (this may take a while, depending on the number of ASNs) ...")
@@ -72,15 +73,13 @@ def CheckIPs(netblocks,ipfile):
 	print("5) All done!")
 
 def IPInNetblock(ip,netblocks):
-	#print(ip)
-	#print(netblocks)
 	matchingblocks=netaddr.all_matching_cidrs(ip,netblocks)
 	if len(matchingblocks)>0:
 		for matchingblock in matchingblocks:
-			print(ip+" --> "+str(matchingblock))
+			print("!) "+ip+" --> "+str(matchingblock))
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
-		print("*) Usage: "+sys.argv[0]+" <file-with-IPs-to-check>")
+		print("?) Usage: "+sys.argv[0]+" <file-with-IPs-to-check>")
 	else:
 		CheckIPs(BuildNetblocks(MyASNs),sys.argv[1])
