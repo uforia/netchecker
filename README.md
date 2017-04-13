@@ -1,4 +1,6 @@
 # Description  
+
+(c) Arnim Eijkhoudt <arnime _squiggly_ kpn-cert.nl>, 2017, KPN-CERT, GPLv2 license
   
 Netchecker lets you offline-check a list of IP addresses against known AS numbers/names. Works with both IPv4 and IPv6! This tool is useful
 for checking of e.g. leaked/dumped IPs against ASNs to see if there are matches, without having to use internet sources and thereby risking
