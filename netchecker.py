@@ -72,7 +72,7 @@ def BuildNetblocks(ASNs,options):
 			with open(GeoIPv6,'rb') as f:
 				IPv6ASNs=tuple(csv.reader(f))
 	except IOError:
-		print("E) Error opening/reading ASN file(s): "+GeoIP+" or "+GeoIPv6+"!")
+		print("E) Error opening/reading ASN file(s): "+GeoIP+" or "+GeoIPv6+" - try running with -u (update) option")
 		sys.exit(1)
 	netblocks={}
 	if options.verbose:
@@ -114,7 +114,7 @@ def BuildNetblocks(ASNs,options):
 						sys.stdout.write(str('.'))
 						sys.stdout.flush()
 		if options.verbose:
-			print(" Found "+str(ipv4count+ipv6count)+" netblocks (IPv4:"+str(ipv4count)+"/IPv6:"+str(ipv6count)+")")
+			print("Found "+str(ipv4count+ipv6count)+" netblocks (IPv4:"+str(ipv4count)+"/IPv6:"+str(ipv6count)+")")
 	if options.verbose:
 		print("3) Done building the list of netblocks!")
 	return netblocks
