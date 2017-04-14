@@ -24,35 +24,35 @@ def UpdateGeoIP():
 	try:
 		response=urllib2.urlopen(GeoIPURL+GeoIPURLzip)
 	except urllib2.URLError as e:
-		print("An error occurred downloading "+GeoIPURL+GeoIPURLzip+": "+e.reason)
+		print("E) An error occurred downloading "+GeoIPURL+GeoIPURLzip+": "+e.reason)
 	try:
 		with open(GeoIPURLzip,'wb') as f:
 			f.write(response.read())
 	except IOError:
-		print("An error occurred writing "+GeoIPURLzip+ " to disk!")
+		print("E) An error occurred writing "+GeoIPURLzip+ " to disk!")
 	try:
 		with zipfile.ZipFile(GeoIPURLzip,'r') as z:
 			with open(GeoIP,'wb') as f:
 				f.write(z.read(GeoIP))
 				os.unlink(GeoIPURLzip)
 	except:
-		print("An error occured unzipping "+GeoIPURLzip)
+		print("E) An error occured unzipping "+GeoIPURLzip)
 	try:
 		response=urllib2.urlopen(GeoIPURL+GeoIPv6URLzip)
 	except urllib2.URLError as e:
-		print("An error occurred downloading "+GeoIPURL+GeoIPv6URLzip+": "+e.reason)
+		print("E) An error occurred downloading "+GeoIPURL+GeoIPv6URLzip+": "+e.reason)
 	try:
 		with open(GeoIPv6URLzip,'wb') as f:
 			f.write(response.read())
 	except IOError:
-		print("An error occurred writing "+GeoIPv6URLzip+ " to disk!")
+		print("E) An error occurred writing "+GeoIPv6URLzip+ " to disk!")
 	try:
 		with zipfile.ZipFile(GeoIPv6URLzip,'r') as z:
 			with open(GeoIPv6,'wb') as f:
 				f.write(z.read(GeoIPv6))
 				os.unlink(GeoIPv6URLzip)
 	except:
-		print("An error occured unzipping "+GeoIPv6URLzip)
+		print("E) An error occured unzipping "+GeoIPv6URLzip)
 
 def IntIPtoStr(integervalue):
 	"""
@@ -153,10 +153,10 @@ if __name__ == "__main__":
 	(options,ASNs)=cli.parse_args()
 	if options.update:
 		if options.verbose:
-			print("Updating GeoLite IP databases from "+GeoIPURL+'...')
+			print("*) Updating GeoLite IP databases from "+GeoIPURL+'...')
 		UpdateGeoIP()
 		if options.verbose:
-			print("Update done!")
+			print("*) Update done!")
 	if (not options.filename or len(ASNs)<1) and not options.update:
 		cli.print_help()
 		sys.exit(1)
