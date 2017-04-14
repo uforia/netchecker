@@ -88,7 +88,7 @@ def BuildNetblocks(ASNs,options):
 				netblockstartint,netblockendint,ASname=IPv4ASN
 			except:
 				print("E) An error occurred parsing the IPv4ASN: "+IPv4ASN)
-			if prog.search(ASname,re.IGNORECASE):
+			if prog.search(ASname):
 				netblockstart='.'.join(IntIPtoStr(int(netblockstartint)))
 				netblockend='.'.join(IntIPtoStr(int(netblockendint)))
 				for item in netaddr.cidr_merge(list(netaddr.iter_iprange(netblockstart,netblockend))):
@@ -105,7 +105,7 @@ def BuildNetblocks(ASNs,options):
 				ASname,netblockstartaddress,netblockendaddress,netmask=IPv6ASN
 			except:
 				print("E) An error occurred parsing the IPv6ASN: "+IPv6ASN)
-			if prog.search(ASname,re.IGNORECASE):
+			if prog.search(ASname):
 				netblock=str([netaddr.IPNetwork(str(netblockstartaddress+'/'+netmask))][0])
 				netblocks[str(netblock)]=ASname
 				if options.verbose:
