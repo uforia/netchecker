@@ -72,7 +72,7 @@ def BuildNetblocks(ASNs,options):
 			with open(GeoIPv6,'rb') as f:
 				IPv6ASNs=tuple(csv.reader(f))
 	except IOError:
-		print("E) Error opening/reading ASN file(s): "+IPv4ASNs+" or "+IPv6ASNs+"!")
+		print("E) Error opening/reading ASN file(s): "+GeoIP+" or "+GeoIPv6+"!")
 		sys.exit(1)
 	netblocks={}
 	if options.verbose:
