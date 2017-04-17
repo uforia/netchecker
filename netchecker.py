@@ -14,7 +14,13 @@ GeoIPv6='GeoIPASNum2v6.csv'
 
 ### The 'netaddr' module can be downloaded through PyPi (pip install ...) or installed
 ### through your package manager of choice.
-import netaddr,sys,re,csv,optparse,urllib2,zipfile,os
+import netaddr,sys,re,csv,optparse,zipfile,os
+
+### Python 2/3 compatibility
+try:
+	import urllib2 as urllib
+except ImportError:
+	import urllib
 
 def UpdateGeoIP():
 	"""
@@ -22,8 +28,8 @@ def UpdateGeoIP():
 	This will overwrite any existing file(s) with the same name.
 	"""
 	try:
-		response=urllib2.urlopen(GeoIPURL+GeoIPURLzip)
-	except urllib2.URLError as e:
+		response=urllib.urlopen(GeoIPURL+GeoIPURLzip)
+	except urllib.URLError as e:
 		print("E) An error occurred downloading "+GeoIPURL+GeoIPURLzip+": "+e.reason)
 	try:
 		with open(GeoIPURLzip,'wb') as f:
@@ -38,8 +44,8 @@ def UpdateGeoIP():
 	except:
 		print("E) An error occured unzipping "+GeoIPURLzip)
 	try:
-		response=urllib2.urlopen(GeoIPURL+GeoIPv6URLzip)
-	except urllib2.URLError as e:
+		response=urllib.urlopen(GeoIPURL+GeoIPv6URLzip)
+	except urllib.URLError as e:
 		print("E) An error occurred downloading "+GeoIPURL+GeoIPv6URLzip+": "+e.reason)
 	try:
 		with open(GeoIPv6URLzip,'wb') as f:
