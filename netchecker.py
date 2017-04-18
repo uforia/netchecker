@@ -149,7 +149,7 @@ def BuildCache(options):
 	try:
 		with open(GeoCache,'wb') as f:
 			pickle.dump(netblockdict,f)
-	except :
+	except:
 		print("E) An error occurred writing the cache to disk!")
 		sys.exit(1)
 	if options.verbose:
@@ -162,8 +162,17 @@ def CheckIPs(options,ASNs):
 	Check if the given filename containing IP addresses has any that belong to the generated list of netblocks
 	"""
 	try:
+		ips=set()
+		ipv4_address = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+		ipv6_address = re.compile('(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))')
 		with open(options.filename) as ipfp:
-			ips=ipfp.readlines()
+			for line in ipfp.readlines():
+				result1=ipv4_address.finditer(line)
+				result2=ipv6_address.finditer(line)
+				for ip in [line.group(0) for line in result1]:
+					ips.add(ip)
+				for ip in [line.group(0) for line in result2]:
+					ips.add(ip)
 	except IOError:
 		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
@@ -202,12 +211,12 @@ def CheckIPs(options,ASNs):
 						netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
 					if version==6:
 						netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
-				for line in ips:
-					ip=line.strip()
+				for ip in ips:
 					try:
-						ipversion=ipaddress.ip_address(unicode(ip)).version
-						ipcount+=1
+						ip=unicode(ip)
 					except NameError:
+						pass
+					try:
 						ipversion=ipaddress.ip_address(ip).version
 						ipcount+=1
 					except ValueError:
@@ -218,9 +227,12 @@ def CheckIPs(options,ASNs):
 							sys.stdout.flush()
 					for netblock in netblocks:
 						try:
-							netblockversion=ipaddress.ip_address(unicode(netblock[0])).version
+							netblockstart=netblock[0]
+							netblockstart=unicode(netblockstart)
 						except NameError:
-							netblockversion=ipaddress.ip_address(netblock[0]).version
+							pass
+						try:
+							netblockversion=ipaddress.ip_address(netblockstart).version
 						except ValueError:
 							continue
 						if ipversion==4 and netblockversion==4:
@@ -231,12 +243,12 @@ def CheckIPs(options,ASNs):
 								else:
 									output+="\""+ip+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
 						if ipversion==6 and netblockversion==6:
-							if netaddr.IPAddress(ip) in netaddr.IPNetwork(netblock):
+							if netaddr.IPAddress(ip,6) in netaddr.IPNetwork(netblock[0],netblock[1],6):
 								if options.verbose:
-									output+="!) "+ip+" --> "+netblock+" ("+key+")\n"
+									output+="!) "+ip+" --> "+netblock[0]+'/'+netblock[1]+" ("+key+")\n"
 									hits+=1
 								else:
-									output+="\""+ip+"\",\""+netblock+"\",\""+key+"\"\n"
+									output+="\""+ip+"\",\""+netblock[0]+'/'+netblock[1]+"\",\""+key+"\"\n"
 		if options.verbose:
 			sys.stdout.write('\n')
 			sys.stdout.flush()
@@ -258,7 +270,7 @@ if __name__=="__main__":
 		BuildCache(options)
 	elif options.build:
 		BuildCache(options)
-	elif options.filename:
+	if options.filename:
 		if len(ASNs)>0:
 			CheckIPs(options,ASNs)
 	else:
