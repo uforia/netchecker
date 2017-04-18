@@ -204,6 +204,12 @@ def CheckIPs(options,ASNs):
 						netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
 				for line in ips:
 					ip=line.strip()
+					try:
+						ipversion=ipaddress.ip_address(unicode(ip)).version
+					except NameError:
+						ipversion=ipaddress.ip_address(ip).version
+					except ValueError:
+						continue
 					if options.verbose:
 						ipcount+=1
 						if (ipcount%10)==0:
@@ -211,11 +217,11 @@ def CheckIPs(options,ASNs):
 							sys.stdout.flush()
 					for netblock in netblocks:
 						try:
-							ipversion=ipaddress.ip_address(unicode(ip)).version
 							netblockversion=ipaddress.ip_address(unicode(netblock[0])).version
 						except NameError:
-							ipversion=ipaddress.ip_address(ip).version
 							netblockversion=ipaddress.ip_address(netblock[0]).version
+						except ValueError:
+							continue
 						if ipversion==4 and netblockversion==4:
 							if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
 								if options.verbose:
