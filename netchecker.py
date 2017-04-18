@@ -206,12 +206,13 @@ def CheckIPs(options,ASNs):
 					ip=line.strip()
 					try:
 						ipversion=ipaddress.ip_address(unicode(ip)).version
+						ipcount+=1
 					except NameError:
 						ipversion=ipaddress.ip_address(ip).version
+						ipcount+=1
 					except ValueError:
 						continue
 					if options.verbose:
-						ipcount+=1
 						if (ipcount%10)==0:
 							sys.stdout.write('.')
 							sys.stdout.flush()
