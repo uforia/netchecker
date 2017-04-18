@@ -17,7 +17,8 @@ the possibility of announcing your interest in the checked IPs.
   
 1) git clone https://github.com/uforia/netchecker.git
 2) pip install netaddr, apt-get install python-netaddr, emerge dev-python/netaddr or whatever else you use for package management
-3) download the GeoLite ASN databases by running ./netchecker.py -u
+3) if using Python 2.x, install py-ipaddress (pip install ipaddress, etc.)
+4) download the GeoLite ASN databases by running ./netchecker.py -u
 
 # Usage  
   
