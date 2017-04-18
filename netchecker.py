@@ -195,7 +195,7 @@ def CheckIPs(options,ASNs):
 		hits=0
 	for ASN in ASNs:
 		if options.verbose:
-			sys.stdout.write("I) "+ASN+': ')
+			sys.stdout.write("I) Search string: "+ASN+' ')
 			sys.stdout.flush()
 		prog=re.compile(ASN,re.IGNORECASE)
 		for key in netblockdict:
@@ -218,11 +218,11 @@ def CheckIPs(options,ASNs):
 						pass
 					try:
 						ipversion=ipaddress.ip_address(ip).version
-						ipcount+=1
 					except ValueError:
 						continue
 					if options.verbose:
-						if (ipcount%10)==0:
+						ipcount+=1
+						if (ipcount%20)==0:
 							sys.stdout.write('.')
 							sys.stdout.flush()
 					for netblock in netblocks:
