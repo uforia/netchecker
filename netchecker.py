@@ -23,9 +23,10 @@ try:
 except ImportError:
 	from urllib2 import urlopen
 try:
-	import ipaddr as ipaddress
-except ImportError:
 	import ipaddress
+except ImportError:
+	print("E) Python ipaddress module is required: maybe you need to pip install ipaddress?")
+	sys.exit(1)
 
 def UpdateGeoIP(options):
 	"""
