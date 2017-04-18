@@ -247,12 +247,11 @@ if __name__=="__main__":
 	(options,ASNs)=cli.parse_args()
 	if options.update:
 		UpdateGeoIP(options)
-	if options.update or options.build:
 		BuildCache(options)
-	if options.filename:
-		if len(ASNs)<1:
-			cli.print_help()
-		else:
+	elif options.build:
+		BuildCache(options)
+	elif options.filename:
+		if len(ASNs)>0:
 			CheckIPs(options,ASNs)
 	else:
 		cli.print_help()

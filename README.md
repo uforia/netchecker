@@ -9,8 +9,9 @@ the possibility of announcing your interest in the checked IPs.
 # Requirements  
   
 1) Python 2.7.x / 3.x (should work with both...)
-2) netaddr module (installable through PyPi etc.): https://pypi.python.org/pypi/netaddr
-3) MaxMind's GeoLite ASN databases: http://dev.maxmind.com/geoip/legacy/geolite/
+2) [required] netaddr module (installable through PyPi etc.): https://pypi.python.org/pypi/netaddr
+3) [required] For Python 2.7: ipaddr module: https://pypi.python.org/pypi/ipaddr
+4) [optional] MaxMind's GeoLite ASN databases: http://dev.maxmind.com/geoip/legacy/geolite/
   
 # Installation  
   
