@@ -11,22 +11,29 @@ GeoIPURLzip='GeoIPASNum2.zip'
 GeoIPv6URLzip='GeoIPASNum2v6.zip'
 GeoIP='GeoIPASNum2.csv'
 GeoIPv6='GeoIPASNum2v6.csv'
+GeoCache='GeoCache.db'
 
 ### The 'netaddr' module can be downloaded through PyPi (pip install ...) or installed
 ### through your package manager of choice.
-import netaddr,sys,re,csv,optparse,zipfile,os
+import sys,re,csv,optparse,zipfile,os,netaddr,pickle
 
-### Python 2/3 compatibility
+### Python 2/3 compatibility (urllib2 and ipaddr no longer exist in Python 3.x)
 try:
 	import urllib2 as urllib
 except ImportError:
 	import urllib
+try:
+	import ipaddr as ipaddress
+except ImportError:
+	import ipaddress
 
-def UpdateGeoIP():
+def UpdateGeoIP(options):
 	"""
 	Download the GeoLite IP databases from MaxMind and unpack them into the current working directory.
 	This will overwrite any existing file(s) with the same name.
 	"""
+	if options.verbose:
+		print("U) Updating GeoLite ASN databases from "+GeoIPURL+'...')
 	try:
 		response=urllib.urlopen(GeoIPURL+GeoIPURLzip)
 	except urllib.URLError as e:
@@ -59,111 +66,166 @@ def UpdateGeoIP():
 				os.unlink(GeoIPv6URLzip)
 	except:
 		print("E) An error occured unzipping "+GeoIPv6URLzip)
+	if options.verbose:
+		print("U) Update done!")
 
 def IntIPtoStr(integervalue):
 	"""
 	Convert an integer-formatted IPv4 address into a tuple which can be converted into dot notation
 	"""
-	return str(int(integervalue/16777216)%256),str(int(integervalue/65536)%256),str(int(integervalue/256)%256),str(int(integervalue)%256)
+	return str(netaddr.IPAddress(integervalue))
 
-def BuildNetblocks(ASNs,options):
+def StrIPtoInt(stringvalue):
 	"""
-	Build a list of netblocks based on the user-given list of AS numbers/names
+	Convert a string-formatted IPv4 address back into an integer value
 	"""
+	return int(netaddr.IPAddress(stringvalue))
+
+def BuildCache(options):
+	"""
+	Build a list of IP ranges out of the MaxMind files, build a lookup dictionary and write it to disk for caching purposes
+	"""
+	if options.verbose:
+		print("U) Building the GeoLite ASN cache...")
 	try:
 		if GeoIP:
-			with open(GeoIP,'rb') as f:
+			with open(GeoIP,'rt',encoding='iso8859-1') as f:
 				IPv4ASNs=tuple(csv.reader(f))
 		if GeoIPv6:
-			with open(GeoIPv6,'rb') as f:
+			with open(GeoIPv6,'rt',encoding='iso8859-1') as f:
+				IPv6ASNs=tuple(csv.reader(f))
+	except TypeError:
+		### Python 2.7 compatibility
+		if GeoIP:
+			with open(GeoIP,'rt') as f:
+				IPv4ASNs=tuple(csv.reader(f))
+		if GeoIPv6:
+			with open(GeoIPv6,'rt') as f:
 				IPv6ASNs=tuple(csv.reader(f))
 	except IOError:
 		print("E) Error opening/reading ASN file(s): "+GeoIP+" or "+GeoIPv6+" - try running with -u (update) option")
 		sys.exit(1)
-	netblocks={}
+	netblockdict={}
 	if options.verbose:
-		print("1) Building the list of netblocks (this may take a while, depending on the number of ASNs) ...")
-	for ASN in ASNs:
+		print("U) Building netblock cache, this will take a while...")
+		ipv4count,ipv6count=0,0
+	for line in IPv4ASNs:
+		try:
+			netblockstartint,netblockendint,ASname=line
+		except:
+			print("E) An error occurred parsing the IPv4ASN: "+line)
+			next
 		if options.verbose:
-			print('2) Searching for AS number/name: '+ASN)
-		prog=re.compile(ASN,re.IGNORECASE)
+			ipv4count+=1
+			if (ipv4count%500==0):
+				sys.stdout.write('.')
+				sys.stdout.flush()
+		netblockstart=int(netblockstartint)
+		netblockend=int(netblockendint)
+		netblock=(netblockstart,netblockend)
+		if ASname in netblockdict:
+			netblockdict[ASname].append(netblock)
+		else:
+			netblockdict[ASname]=list()
+			netblockdict[ASname].append(netblock)
+	for line in IPv6ASNs:
+		try:
+			ASname,netblockstartaddress,netblockendaddress,netmask=line
+		except:
+			print("E) An error occurred parsing the IPv6ASN: "+IPv6ASN)
+			next
 		if options.verbose:
-			ipv4count=0
-		for IPv4ASN in IPv4ASNs:
-			try:
-				netblockstartint,netblockendint,ASname=IPv4ASN
-			except:
-				print("E) An error occurred parsing the IPv4ASN: "+IPv4ASN)
-			if prog.search(ASname):
-				netblockstart='.'.join(IntIPtoStr(int(netblockstartint)))
-				netblockend='.'.join(IntIPtoStr(int(netblockendint)))
-				for item in netaddr.cidr_merge(list(netaddr.iter_iprange(netblockstart,netblockend))):
-					netblocks[str(item)]=ASname
-					if options.verbose:
-						ipv4count+=1
-						if (ipv4count%20==0):
-							sys.stdout.write('.')
-							sys.stdout.flush()
-		if options.verbose:
-			ipv6count=0
-		for IPv6ASN in IPv6ASNs:
-			try:
-				ASname,netblockstartaddress,netblockendaddress,netmask=IPv6ASN
-			except:
-				print("E) An error occurred parsing the IPv6ASN: "+IPv6ASN)
-			if prog.search(ASname):
-				netblock=str([netaddr.IPNetwork(str(netblockstartaddress+'/'+netmask))][0])
-				netblocks[str(netblock)]=ASname
-				if options.verbose:
-					ipv6count+=1
-					if (ipv6count%20==0):
-						sys.stdout.write(str('.'))
-						sys.stdout.flush()
-		if options.verbose:
-			print("Found "+str(ipv4count+ipv6count)+" netblocks (IPv4:"+str(ipv4count)+"/IPv6:"+str(ipv6count)+")")
+			ipv6count+=1
+			if (ipv6count%500==0):
+				sys.stdout.write('.')
+				sys.stdout.flush()
+		netblock=(netblockstartaddress,netmask)
+		if ASname in netblockdict:
+			netblockdict[ASname].append(netblock)
+		else:
+			netblockdict[ASname]=list()
+			netblockdict[ASname].append(netblock)
+	try:
+		with open(GeoCache,'wb') as f:
+			pickle.dump(netblockdict,f)
+	except :
+		print("E) An error occurred writing the cache to disk!")
+		sys.exit(1)
 	if options.verbose:
-		print("3) Done building the list of netblocks!")
-	return netblocks
+		sys.stdout.write('\n')
+		sys.stdout.flush()
+		print("U) Successfully built the GeoLite ASN cache: "+str(ipv4count+ipv6count)+" ranges (IPv4:"+str(ipv4count)+"/IPv6:"+str(ipv6count)+")")
 
-def CheckIPs(netblocks,options):
+def CheckIPs(options,ASNs):
 	"""
 	Check if the given filename containing IP addresses has any that belong to the generated list of netblocks
 	"""
 	try:
 		with open(options.filename) as ipfp:
-			if options.verbose:
-				print("4) Checking the list of IPs ...")
-			else:
-				print("\"IP\",\"Network\",\"ASname\"")
-			for ip in ipfp.readlines():
-				IPInNetblock(ip.strip(),netblocks)
+			ips=ipfp.readlines()
 	except IOError:
-		print("E) Error opening "+ipfile+"!")
+		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
 	if options.verbose:
-		print("5) All done!")
-
-def IPInNetblock(ip,netblocks):
-	for netblock in netblocks:
-		if netaddr.IPAddress(ip) in netaddr.IPNetwork(netblock):
-			if options.verbose:
-				print("!) "+ip+" --> "+netblock+" ("+netblocks[netblock]+")")
-			else:
-				print("\""+ip+"\",\""+netblock+"\",\""+netblocks[netblock]+"\"")
+		print("I) Reading GeoLite ASN cache...")
+	try:
+		with open(GeoCache,'rb') as f:
+			netblockdict=pickle.load(f)
+	except:
+		print("E) An error occurred reading the cache from disk!")
+		sys.exit(1)
+	if options.verbose:
+		print("I) Loaded GeoLite ASN cache!")
+		print("I) Checking the list of IPs...")
+	else:
+		print("\"IP\",\"Network\",\"ASname\"")
+	for ASN in ASNs:
+		prog=re.compile(ASN,re.IGNORECASE)
+		for key in netblockdict:
+			if prog.search(key):
+				# Build netblocks
+				netblocks=[]
+				for range in netblockdict[key]:
+					version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
+					if version==4:
+						netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
+					if version==6:
+						netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
+				for line in ips:
+					ip=line.strip()
+					for netblock in netblocks:
+						ipversion=ipaddress.ip_address(unicode(ip)).version
+						netblockversion=ipaddress.ip_address(unicode(netblock[0])).version
+						if ipversion==4 and netblockversion==4:
+							if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
+								if options.verbose:
+									print("!) "+ip+" --> "+netblock[0]+'-'+netblock[1]+" ("+key+")")
+								else:
+									print("\""+ip+"\",\""+netblock[0]+'-'+netblock[1]+"\",\""+key+"\"")
+						if ipversion==6 and netblockversion==6:
+							if netaddr.IPAddress(ip) in netaddr.IPNetwork(netblock):
+								if options.verbose:
+									print("!) "+ip+" --> "+netblock+" ("+key+")")
+								else:
+									print("\""+ip+"\",\""+netblock+"\",\""+key+"\"")
+	if options.verbose:
+		print("I) All done!")
 
 if __name__ == "__main__":
 	cli=optparse.OptionParser(usage="usage: %prog -f <IPFILE> [options...] <list of AS names / numbers> ...\n\nE.g.: %prog -f ips.txt AS286 'KPN B.V.' BlepTech ...")
 	cli.add_option('-f','--file',dest='filename',action='store',help='[required] File with IPs to check',metavar='IPFILE')
 	cli.add_option('-q','--quiet',dest='verbose',action='store_false',default=True,help='[optional] Do not print progress, errors (quiet operation), CSV output format')
-	cli.add_option('-u','--update',dest='update',action='store_true',default=False,help='[optional] Update the GeoLite databases (obviously requires an active internet connection)')
+	cli.add_option('-u','--update',dest='update',action='store_true',default=False,help='[optional] Update and build the GeoLite ASN cache (requires an internet connection)')
+	cli.add_option('-b','--build',dest='build',action='store_true',default=False,help='[optional] Build the GeoLite ASN cache (use if you downloaded the MaxMind files manually')
 	(options,ASNs)=cli.parse_args()
 	if options.update:
-		if options.verbose:
-			print("*) Updating GeoLite IP databases from "+GeoIPURL+'...')
-		UpdateGeoIP()
-		if options.verbose:
-			print("*) Update done!")
-	if (not options.filename or len(ASNs)<1) and not options.update:
+		UpdateGeoIP(options)
+	if options.update or options.build:
+		BuildCache(options)
+	if options.filename:
+		if len(ASNs)<1:
+			cli.print_help()
+		else:
+			CheckIPs(options,ASNs)
+	else:
 		cli.print_help()
-		sys.exit(1)
-	CheckIPs(BuildNetblocks(ASNs,options),options)
