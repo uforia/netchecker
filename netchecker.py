@@ -242,13 +242,13 @@ def CheckIPs(options,ASNs):
 									hits+=1
 								else:
 									output+="\""+ip+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
-						if ipversion==6 and netblockversion==6:
+						elif ipversion==6 and netblockversion==6:
 							if netaddr.IPAddress(ip,6) in netaddr.IPNetwork(netblock[0],netblock[1],6):
 								if options.verbose:
-									output+="!) "+ip+" --> "+netblock[0]+'/'+netblock[1]+" ("+key+")\n"
+									output+="!) "+ip+" --> "+netblock[1]+" ("+key+")\n"
 									hits+=1
 								else:
-									output+="\""+ip+"\",\""+netblock[0]+'/'+netblock[1]+"\",\""+key+"\"\n"
+									output+="\""+ip+"\",\""+netblock[1]+"\",\""+key+"\"\n"
 		if options.verbose:
 			sys.stdout.write('\n')
 			sys.stdout.flush()
