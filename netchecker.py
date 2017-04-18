@@ -19,9 +19,9 @@ import sys,re,csv,optparse,zipfile,os,netaddr,pickle
 
 ### Python 2/3 compatibility (urllib2 and ipaddr no longer exist in Python 3.x)
 try:
-	import urllib2 as urllib
+	from urllib.request import urlopen
 except ImportError:
-	import urllib
+	from urllib2 import urlopen
 try:
 	import ipaddr as ipaddress
 except ImportError:
@@ -33,11 +33,11 @@ def UpdateGeoIP(options):
 	This will overwrite any existing file(s) with the same name.
 	"""
 	if options.verbose:
-		print("U) Updating GeoLite ASN databases from "+GeoIPURL+'...')
+		print("U) Updating GeoLite ASN databases from "+GeoIPURL)
 	try:
-		response=urllib.urlopen(GeoIPURL+GeoIPURLzip)
-	except urllib.URLError as e:
-		print("E) An error occurred downloading "+GeoIPURL+GeoIPURLzip+": "+e.reason)
+		response=urlopen(GeoIPURL+GeoIPURLzip)
+	except:
+		print("E) An error occurred downloading "+GeoIPURL+GeoIPURLzip)
 	try:
 		with open(GeoIPURLzip,'wb') as f:
 			f.write(response.read())
@@ -51,9 +51,9 @@ def UpdateGeoIP(options):
 	except:
 		print("E) An error occured unzipping "+GeoIPURLzip)
 	try:
-		response=urllib.urlopen(GeoIPURL+GeoIPv6URLzip)
-	except urllib.URLError as e:
-		print("E) An error occurred downloading "+GeoIPURL+GeoIPv6URLzip+": "+e.reason)
+		response=urlopen(GeoIPURL+GeoIPv6URLzip)
+	except:
+		print("E) An error occurred downloading "+GeoIPURL+GeoIPv6URLzip)
 	try:
 		with open(GeoIPv6URLzip,'wb') as f:
 			f.write(response.read())
@@ -86,7 +86,7 @@ def BuildCache(options):
 	Build a list of IP ranges out of the MaxMind files, build a lookup dictionary and write it to disk for caching purposes
 	"""
 	if options.verbose:
-		print("U) Building the GeoLite ASN cache...")
+		print("U) Building the GeoLite ASN cache")
 	try:
 		if GeoIP:
 			with open(GeoIP,'rt',encoding='iso8859-1') as f:
@@ -107,7 +107,7 @@ def BuildCache(options):
 		sys.exit(1)
 	netblockdict={}
 	if options.verbose:
-		print("U) Building netblock cache, this will take a while...")
+		print("U) Building netblock cache, this will take a while")
 		ipv4count,ipv6count=0,0
 	for line in IPv4ASNs:
 		try:
@@ -117,7 +117,7 @@ def BuildCache(options):
 			next
 		if options.verbose:
 			ipv4count+=1
-			if (ipv4count%500==0):
+			if (ipv4count%500)==0:
 				sys.stdout.write('.')
 				sys.stdout.flush()
 		netblockstart=int(netblockstartint)
@@ -167,7 +167,7 @@ def CheckIPs(options,ASNs):
 		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
 	if options.verbose:
-		print("I) Reading GeoLite ASN cache...")
+		print("I) Reading GeoLite ASN cache")
 	try:
 		with open(GeoCache,'rb') as f:
 			netblockdict=pickle.load(f)
@@ -176,42 +176,69 @@ def CheckIPs(options,ASNs):
 		sys.exit(1)
 	if options.verbose:
 		print("I) Loaded GeoLite ASN cache!")
-		print("I) Checking the list of IPs...")
+		print("I) Checking the list of IPs")
 	else:
 		print("\"IP\",\"Network\",\"ASname\"")
+	output=""
+	if options.verbose:
+		ipcount=0
+		hits=0
 	for ASN in ASNs:
+		if options.verbose:
+			sys.stdout.write("I) "+ASN+': ')
+			sys.stdout.flush()
 		prog=re.compile(ASN,re.IGNORECASE)
 		for key in netblockdict:
 			if prog.search(key):
 				# Build netblocks
 				netblocks=[]
 				for range in netblockdict[key]:
-					version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
+					try:
+						version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
+					except NameError:
+						version=ipaddress.ip_address(IntIPtoStr(range[0])).version
 					if version==4:
 						netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
 					if version==6:
 						netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
 				for line in ips:
 					ip=line.strip()
+					if options.verbose:
+						ipcount+=1
+						if (ipcount%10)==0:
+							sys.stdout.write('.')
+							sys.stdout.flush()
 					for netblock in netblocks:
-						ipversion=ipaddress.ip_address(unicode(ip)).version
-						netblockversion=ipaddress.ip_address(unicode(netblock[0])).version
+						try:
+							ipversion=ipaddress.ip_address(unicode(ip)).version
+							netblockversion=ipaddress.ip_address(unicode(netblock[0])).version
+						except NameError:
+							ipversion=ipaddress.ip_address(ip).version
+							netblockversion=ipaddress.ip_address(netblock[0]).version
 						if ipversion==4 and netblockversion==4:
 							if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
 								if options.verbose:
-									print("!) "+ip+" --> "+netblock[0]+'-'+netblock[1]+" ("+key+")")
+									output+="!) "+ip+" --> "+netblock[0]+"-"+netblock[1]+" ("+key+")\n"
+									hits+=1
 								else:
-									print("\""+ip+"\",\""+netblock[0]+'-'+netblock[1]+"\",\""+key+"\"")
+									output+="\""+ip+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
 						if ipversion==6 and netblockversion==6:
 							if netaddr.IPAddress(ip) in netaddr.IPNetwork(netblock):
 								if options.verbose:
-									print("!) "+ip+" --> "+netblock+" ("+key+")")
+									output+="!) "+ip+" --> "+netblock+" ("+key+")\n"
+									hits+=1
 								else:
-									print("\""+ip+"\",\""+netblock+"\",\""+key+"\"")
+									output+="\""+ip+"\",\""+netblock+"\",\""+key+"\"\n"
+		if options.verbose:
+			sys.stdout.write('\n')
+			sys.stdout.flush()
+	if output:
+		sys.stdout.write(output)
+		sys.stdout.flush()
 	if options.verbose:
-		print("I) All done!")
+		print("I) All done, "+str(len(ips))+" IPs checked, found "+str(hits)+" matches")
 
-if __name__ == "__main__":
+if __name__=="__main__":
 	cli=optparse.OptionParser(usage="usage: %prog -f <IPFILE> [options...] <list of AS names / numbers> ...\n\nE.g.: %prog -f ips.txt AS286 'KPN B.V.' BlepTech ...")
 	cli.add_option('-f','--file',dest='filename',action='store',help='[required] File with IPs to check',metavar='IPFILE')
 	cli.add_option('-q','--quiet',dest='verbose',action='store_false',default=True,help='[optional] Do not print progress, errors (quiet operation), CSV output format')
