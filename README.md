@@ -4,7 +4,7 @@
   
 Netchecker lets you offline-check a list of IP addresses against known AS numbers/names. Works with both IPv4 and IPv6! This tool is useful for checking of e.g. leaked/dumped IPs against ASNs to see if there are matches, without having to use internet sources and thereby risking the possibility of announcing your interest in the checked IPs.
   
-Netchecker automatically groks the entirety of the file containing IPs for anything resembling an IPv4 or IPv6 address, and wil determine if any of those IPs belong to one of the AS numbers/names you specified. The output shows the IP found and which exact subnet it belongs to - useful for helping to determine the ownership of IPs for delegated prefixes.
+Netchecker automatically groks the entirety of the file containing IPs for anything resembling an IPv4 or IPv6 address, and will determine if any of those IPs belong to one of the AS numbers/names you specified. The output shows the IP found and which exact subnet it belongs to - useful for helping to determine the ownership of IPs for delegated prefixes.
 
 # Requirements  
   
