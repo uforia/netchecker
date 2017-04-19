@@ -21,8 +21,8 @@ the possibility of announcing your interest in the checked IPs.
 
 # Usage  
   
-1) Create a list of IPs in plaintext, one IP per line, in a single file, e.g.: 'ips.txt'
-2) Run netchecker: ./netchecker.py and check the command line options
+Note: For your first run, create the GeoCache db first by running netchecker with the -u option.
+1) Run netchecker over an IP file with some ASNs: ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
 
 # Caveats, miscellaneous, TODO, etc.  
   
