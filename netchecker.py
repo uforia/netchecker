@@ -273,5 +273,7 @@ if __name__=="__main__":
 	if options.filename:
 		if len(ASNs)>0:
 			CheckIPs(options,ASNs)
+		else:
+			cli.print_help()
 	else:
 		cli.print_help()
