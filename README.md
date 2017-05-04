@@ -28,4 +28,4 @@ Note: For your first run, create the GeoCache db first by running netchecker wit
   
 - The more AS names/numbers you check, the longer it takes to build the list of netblocks to verify against!
 - This product uses GeoLite data created by MaxMind, available from http://www.maxmind.com
-- TO-DO: build a lookup table/cache after running the -u (update) command, to speed up lookups
+- TO-DO: detect netblocks (CIDR notation etc.), not just individual IPs.
