@@ -37,6 +37,9 @@ def UpdateGeoIP(options):
 		print("U) Updating GeoLite ASN databases from "+GeoIPURL)
 	try:
 		response=urlopen(GeoIPURL+GeoIPURLzip)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occurred downloading "+GeoIPURL+GeoIPURLzip)
 	try:
@@ -44,15 +47,24 @@ def UpdateGeoIP(options):
 			f.write(response.read())
 	except IOError:
 		print("E) An error occurred writing "+GeoIPURLzip+ " to disk!")
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	try:
 		with zipfile.ZipFile(GeoIPURLzip,'r') as z:
 			with open(GeoIP,'wb') as f:
 				f.write(z.read(GeoIP))
 				os.unlink(GeoIPURLzip)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occured unzipping "+GeoIPURLzip)
 	try:
 		response=urlopen(GeoIPURL+GeoIPv6URLzip)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occurred downloading "+GeoIPURL+GeoIPv6URLzip)
 	try:
@@ -60,11 +72,17 @@ def UpdateGeoIP(options):
 			f.write(response.read())
 	except IOError:
 		print("E) An error occurred writing "+GeoIPv6URLzip+ " to disk!")
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	try:
 		with zipfile.ZipFile(GeoIPv6URLzip,'r') as z:
 			with open(GeoIPv6,'wb') as f:
 				f.write(z.read(GeoIPv6))
 				os.unlink(GeoIPv6URLzip)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occured unzipping "+GeoIPv6URLzip)
 	if options.verbose:
@@ -106,6 +124,9 @@ def BuildCache(options):
 	except IOError:
 		print("E) Error opening/reading ASN file(s): "+GeoIP+" or "+GeoIPv6+" - try running with -u (update) option")
 		sys.exit(1)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	netblockdict={}
 	if options.verbose:
 		print("U) Building netblock cache, this will take a while")
@@ -113,6 +134,9 @@ def BuildCache(options):
 	for line in IPv4ASNs:
 		try:
 			netblockstartint,netblockendint,ASname=line
+		except KeyboardInterrupt:
+			print("E) CTRL-C pressed, stopping!")
+			sys.exit(1)
 		except:
 			print("E) An error occurred parsing the IPv4ASN: "+line)
 			next
@@ -132,6 +156,9 @@ def BuildCache(options):
 	for line in IPv6ASNs:
 		try:
 			ASname,netblockstartaddress,netblockendaddress,netmask=line
+		except KeyboardInterrupt:
+			print("E) CTRL-C pressed, stopping!")
+			sys.exit(1)
 		except:
 			print("E) An error occurred parsing the IPv6ASN: "+IPv6ASN)
 			next
@@ -149,6 +176,9 @@ def BuildCache(options):
 	try:
 		with open(GeoCache,'wb') as f:
 			pickle.dump(netblockdict,f)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occurred writing the cache to disk!")
 		sys.exit(1)
@@ -176,11 +206,17 @@ def CheckIPs(options,ASNs):
 	except IOError:
 		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	if options.verbose:
 		print("I) Reading GeoLite ASN cache")
 	try:
 		with open(GeoCache,'rb') as f:
 			netblockdict=pickle.load(f)
+	except KeyboardInterrupt:
+		print("E) CTRL-C pressed, stopping!")
+		sys.exit(1)
 	except:
 		print("E) An error occurred reading the cache from disk!")
 		sys.exit(1)
@@ -207,6 +243,9 @@ def CheckIPs(options,ASNs):
 						version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
 					except NameError:
 						version=ipaddress.ip_address(IntIPtoStr(range[0])).version
+					except KeyboardInterrupt:
+						print("E) CTRL-C pressed, stopping!")
+						sys.exit(1)
 					if version==4:
 						netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
 					if version==6:
@@ -216,10 +255,16 @@ def CheckIPs(options,ASNs):
 						ip=unicode(ip)
 					except NameError:
 						pass
+					except KeyboardInterrupt:
+						print("E) CTRL-C pressed, stopping!")
+						sys.exit(1)
 					try:
 						ipversion=ipaddress.ip_address(ip).version
 					except ValueError:
 						continue
+					except KeyboardInterrupt:
+						print("E) CTRL-C pressed, stopping!")
+						sys.exit(1)
 					if options.verbose:
 						ipcount+=1
 						if (ipcount%20)==0:
@@ -231,10 +276,16 @@ def CheckIPs(options,ASNs):
 							netblockstart=unicode(netblockstart)
 						except NameError:
 							pass
+						except KeyboardInterrupt:
+							print("E) CTRL-C pressed, stopping!")
+							sys.exit(1)
 						try:
 							netblockversion=ipaddress.ip_address(netblockstart).version
 						except ValueError:
 							continue
+						except KeyboardInterrupt:
+							print("E) CTRL-C pressed, stopping!")
+							sys.exit(1)
 						if ipversion==4 and netblockversion==4:
 							if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
 								if options.verbose:
