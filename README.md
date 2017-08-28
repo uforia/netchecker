@@ -21,8 +21,13 @@ Netchecker automatically groks the entirety of the file containing IPs for anyth
 
 # Usage  
   
-Note: For your first run, create the GeoCache db first by running netchecker with the -u option.
-1) Run netchecker over an IP file with some ASNs: ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
+1) For your first run, create the GeoCache db first by running netchecker with the -u option.
+2) Run netchecker over any text-based file containing IPv4 and/or IPv6 addresses, and specify the ASNs to look for:
+   ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
+
+Usage notes:
+- netchecker will automatically grok the specified file for the addresses; you do NOT need to have them neatly listed!
+- certain flags can be combined, e.g. to -u(pdate) and -f(ind) at the same time
 
 # Caveats, miscellaneous, TODO, etc.  
   
