@@ -192,17 +192,27 @@ def CheckIPs(options,ASNs):
 	Check if the given filename containing IP addresses has any that belong to the generated list of netblocks
 	"""
 	try:
-		ips=set()
+		addresslist=set()
 		ipv4_address = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 		ipv6_address = re.compile('(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))')
+		ipv4_cidr = re.compile(r"(?<!\d\.)(?<!\d)(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?!\d|(?:\.\d))")
+		ipv6_cidr = re.compile('s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])?$')
 		with open(options.filename) as ipfp:
 			for line in ipfp.readlines():
 				result1=ipv4_address.finditer(line)
 				result2=ipv6_address.finditer(line)
+				result3=ipv4_cidr.finditer(line)
+				result4=ipv6_cidr.finditer(line)
 				for ip in [line.group(0) for line in result1]:
-					ips.add(ip)
+					addresslist.add(('ipv4',ip,'32'))
 				for ip in [line.group(0) for line in result2]:
-					ips.add(ip)
+					addresslist.add(('ipv6',ip,'128'))
+				for cidr in [line.group(0) for line in result3]:
+					ip,mask=cidr.split('/')
+					addresslist.add(('ipv4',ip,mask))
+				for cidr in [line.group(0) for line in result4]:
+					ip,mask=cidr.split('/')
+					addresslist.add(('ipv6',ip,mask))
 	except IOError:
 		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
@@ -229,89 +239,92 @@ def CheckIPs(options,ASNs):
 	if options.verbose:
 		ipcount=0
 		hits=0
-	for ASN in ASNs:
-		if options.verbose:
-			sys.stdout.write("I) Search string: "+ASN+' ')
-			sys.stdout.flush()
-		prog=re.compile(ASN,re.IGNORECASE)
-		for key in netblockdict:
-			if prog.search(key):
-				# Build netblocks
-				netblocks=[]
-				for range in netblockdict[key]:
+	ASN='|'.join(ASNs)
+	if ASN=='':
+		ASN='.*'
+	if options.verbose:
+		sys.stdout.write("I) Search string: "+ASN+' ')
+		sys.stdout.flush()
+	prog=re.compile(ASN,re.IGNORECASE)
+	for key in netblockdict:
+		if prog.search(key):
+			# Build netblocks
+			netblocks=[]
+			for range in netblockdict[key]:
+				try:
+					version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
+				except NameError:
+					version=ipaddress.ip_address(IntIPtoStr(range[0])).version
+				except KeyboardInterrupt:
+					print("E) CTRL-C pressed, stopping!")
+					sys.exit(1)
+				if version==4:
+					netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
+				if version==6:
+					netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
+			for iptype,ip,mask in addresslist:
+				try:
+					ip=unicode(ip)
+				except NameError:
+					pass
+				except KeyboardInterrupt:
+					print("E) CTRL-C pressed, stopping!")
+					sys.exit(1)
+				try:
+					ipversion=ipaddress.ip_address(ip).version
+				except ValueError:
+					continue
+				except KeyboardInterrupt:
+					print("E) CTRL-C pressed, stopping!")
+					sys.exit(1)
+				if options.verbose:
+					ipcount+=1
+					if (ipcount%100)==0:
+						sys.stdout.write('.')
+						sys.stdout.flush()
+				for netblock in netblocks:
 					try:
-						version=ipaddress.ip_address(unicode(IntIPtoStr(range[0]))).version
-					except NameError:
-						version=ipaddress.ip_address(IntIPtoStr(range[0])).version
-					except KeyboardInterrupt:
-						print("E) CTRL-C pressed, stopping!")
-						sys.exit(1)
-					if version==4:
-						netblocks.append((IntIPtoStr(range[0]),IntIPtoStr(range[1])))
-					if version==6:
-						netblocks.append((range[0],str([netaddr.IPNetwork(str(range[0]+'/'+range[1]))][0])))
-				for ip in ips:
-					try:
-						ip=unicode(ip)
+						netblockstart=netblock[0]
+						netblockstart=unicode(netblockstart)
 					except NameError:
 						pass
 					except KeyboardInterrupt:
 						print("E) CTRL-C pressed, stopping!")
 						sys.exit(1)
 					try:
-						ipversion=ipaddress.ip_address(ip).version
+						netblockversion=ipaddress.ip_address(netblockstart).version
 					except ValueError:
 						continue
 					except KeyboardInterrupt:
 						print("E) CTRL-C pressed, stopping!")
 						sys.exit(1)
-					if options.verbose:
-						ipcount+=1
-						if (ipcount%20)==0:
-							sys.stdout.write('.')
-							sys.stdout.flush()
-					for netblock in netblocks:
-						try:
-							netblockstart=netblock[0]
-							netblockstart=unicode(netblockstart)
-						except NameError:
-							pass
-						except KeyboardInterrupt:
-							print("E) CTRL-C pressed, stopping!")
-							sys.exit(1)
-						try:
-							netblockversion=ipaddress.ip_address(netblockstart).version
-						except ValueError:
-							continue
-						except KeyboardInterrupt:
-							print("E) CTRL-C pressed, stopping!")
-							sys.exit(1)
-						if ipversion==4 and netblockversion==4:
-							if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
-								if options.verbose:
-									output+="!) "+ip+" --> "+netblock[0]+"-"+netblock[1]+" ("+key+")\n"
-									hits+=1
-								else:
-									output+="\""+ip+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
-						elif ipversion==6 and netblockversion==6:
-							if netaddr.IPAddress(ip,6) in netaddr.IPNetwork(netblock[0],netblock[1],6):
-								if options.verbose:
-									output+="!) "+ip+" --> "+netblock[1]+" ("+key+")\n"
-									hits+=1
-								else:
-									output+="\""+ip+"\",\""+netblock[1]+"\",\""+key+"\"\n"
-		if options.verbose:
-			sys.stdout.write('\n')
-			sys.stdout.flush()
+					if ipversion==4 and netblockversion==4:
+						if StrIPtoInt(ip) > StrIPtoInt(netblock[0]) and StrIPtoInt(ip) < StrIPtoInt(netblock[1]):
+							if options.verbose:
+								output+="!) "+ip+"/"+mask+" --> "+netblock[0]+"-"+netblock[1]+" ("+key+")\n"
+								hits+=1
+							else:
+								output+="\""+ip+"/"+mask+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
+					elif ipversion==6 and netblockversion==6:
+						if netaddr.IPAddress(ip,6) in netaddr.IPNetwork(netblock[0],netblock[1],6):
+							if options.verbose:
+								output+="!) "+ip+"/"+mask+" --> "+netblock[1]+" ("+key+")\n"
+								hits+=1
+							else:
+								output+="\""+ip+"/"+mask+"\",\""+netblock[1]+"\",\""+key+"\"\n"
+	if options.verbose:
+		sys.stdout.write('\n')
+		sys.stdout.flush()
 	if output:
 		sys.stdout.write(output)
 		sys.stdout.flush()
 	if options.verbose:
-		print("I) All done, "+str(len(ips))+" IPs checked, found "+str(hits)+" matches")
+		print("I) All done, "+str(ipcount)+" IPs checked, found "+str(hits)+" matches")
 
 if __name__=="__main__":
 	cli=optparse.OptionParser(usage="usage: %prog -f <IPFILE> [options...] <list of AS names / numbers> ...\n\nE.g.: %prog -f ips.txt AS286 'KPN B.V.' BlepTech ...")
 	cli.add_option('-f','--file',dest='filename',action='store',help='[required] File with IPs to check',metavar='IPFILE')
+	cli.add_option('-a','--all',dest='allasns',action='store_true',default=False,help='[optional] Find the ASNs for all IPs (warning: slow!)')
 	cli.add_option('-q','--quiet',dest='verbose',action='store_false',default=True,help='[optional] Do not print progress, errors (quiet operation), CSV output format')
 	cli.add_option('-u','--update',dest='update',action='store_true',default=False,help='[optional] Update and build the GeoLite ASN cache (requires an internet connection)')
 	cli.add_option('-b','--build',dest='build',action='store_true',default=False,help='[optional] Build the GeoLite ASN cache (use if you downloaded the MaxMind files manually')
@@ -322,7 +335,7 @@ if __name__=="__main__":
 	elif options.build:
 		BuildCache(options)
 	if options.filename:
-		if len(ASNs)>0:
+		if (not options.allasns and len(ASNs)>0) or (options.allasns and not len(ASNs)>0):
 			CheckIPs(options,ASNs)
 		else:
 			cli.print_help()
