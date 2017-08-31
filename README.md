@@ -22,7 +22,7 @@ Netchecker automatically groks the entirety of any text file for anything resemb
 # Usage  
   
 1) For your first run, create the GeoCache db first by running netchecker with the -u option.
-2) Run netchecker over any text-based file containing IPv4 and/or IPv6 addresses, and specify the ASNs to look for:
+2) Run netchecker over any text-based file containing IPv4 and/or IPv6 addresses/CIDRs, and specify the ASNs to look for:
    ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
 
 Usage notes:
@@ -31,6 +31,5 @@ Usage notes:
 
 # Caveats, miscellaneous, TODO, etc.  
   
-- The more AS names/numbers you check, the longer it takes to build the list of netblocks to verify against!
+- The more AS names/numbers you check, the longer it takes to build the list of netblocks to verify against! This is particularly noticeable when you're using the -a/-all option.
 - This product uses GeoLite data created by MaxMind, available from http://www.maxmind.com
-- TO-DO: detect netblocks (CIDR notation etc.), not just individual IPs.
