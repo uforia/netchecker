@@ -26,7 +26,7 @@ Netchecker automatically groks the entirety of any text file for anything resemb
    ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
 
 Usage notes:
-- netchecker will automatically grok the specified file for the addresses; you do NOT need to have them neatly listed!
+- netchecker will automatically carve out anything that looks like an IPv4/IPv6/CIDR address; you do NOT need to have them neatly listed!
 - certain flags can be combined, e.g. to -u(pdate) and -f(ind) at the same time
 
 # Caveats, miscellaneous, TODO, etc.  
