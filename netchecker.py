@@ -192,27 +192,29 @@ def CheckIPs(options,ASNs):
 	Check if the given filename containing IP addresses has any that belong to the generated list of netblocks
 	"""
 	try:
-		addresslist=set()
+		addresslist = set()
 		ipv4_address = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 		ipv6_address = re.compile('(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))')
 		ipv4_cidr = re.compile(r"(?<!\d\.)(?<!\d)(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?!\d|(?:\.\d))")
 		ipv6_cidr = re.compile('s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])?$')
 		with open(options.filename) as ipfp:
 			for line in ipfp.readlines():
-				result1=ipv4_address.finditer(line)
-				result2=ipv6_address.finditer(line)
-				result3=ipv4_cidr.finditer(line)
-				result4=ipv6_cidr.finditer(line)
+				result1 = ipv4_address.finditer(line)
+				result2 = ipv6_address.finditer(line)
+				result3 = ipv4_cidr.finditer(line)
+				result4 = ipv6_cidr.finditer(line)
 				for ip in [line.group(0) for line in result1]:
-					addresslist.add(('ipv4',ip,'32'))
+					addresslist.add(('ipv4', ip, '32'))
 				for ip in [line.group(0) for line in result2]:
-					addresslist.add(('ipv6',ip,'128'))
+					addresslist.add(('ipv6', ip, '128'))
 				for cidr in [line.group(0) for line in result3]:
 					ip,mask=cidr.split('/')
-					addresslist.add(('ipv4',ip,mask))
+					addresslist.add(('ipv4', ip, mask))
 				for cidr in [line.group(0) for line in result4]:
 					ip,mask=cidr.split('/')
-					addresslist.add(('ipv6',ip,mask))
+					addresslist.add(('ipv6', ip, mask))
+		if options.verbose:
+			print("I) Found " + str(len(addresslist)) + " IP addresses in file: " + options.filename)
 	except IOError:
 		print("E) Error opening "+options.filename+"!")
 		sys.exit(1)
@@ -246,6 +248,7 @@ def CheckIPs(options,ASNs):
 		sys.stdout.write("I) Search string: "+ASN+' ')
 		sys.stdout.flush()
 	prog=re.compile(ASN,re.IGNORECASE)
+	matchset=set()
 	for key in netblockdict:
 		if prog.search(key):
 			# Build netblocks
@@ -305,6 +308,7 @@ def CheckIPs(options,ASNs):
 								hits+=1
 							else:
 								output+="\""+ip+"/"+mask+"\",\""+netblock[0]+"-"+netblock[1]+"\",\""+key+"\"\n"
+							matchset.add(('ipv4', ip, '32'))
 					elif ipversion==6 and netblockversion==6:
 						if netaddr.IPAddress(ip,6) in netaddr.IPNetwork(netblock[0],netblock[1],6):
 							if options.verbose:
@@ -312,14 +316,23 @@ def CheckIPs(options,ASNs):
 								hits+=1
 							else:
 								output+="\""+ip+"/"+mask+"\",\""+netblock[1]+"\",\""+key+"\"\n"
+							matchset.add(('ipv6', ip, '128'))
 	if options.verbose:
 		sys.stdout.write('\n')
 		sys.stdout.flush()
 	if output:
 		sys.stdout.write(output)
 		sys.stdout.flush()
+	#if options.verbose:
+	#	print("I) All done, "+str(ipcount)+" IPs checked, found "+str(hits)+" matches")
 	if options.verbose:
-		print("I) All done, "+str(ipcount)+" IPs checked, found "+str(hits)+" matches")
+		if len(matchset) < len(addresslist):
+			print("I) Found " + str(len(matchset)) + " IPs in the specified ASN search string: \"" + ASN + "\" out of " + str(len(addresslist)) + " total IP addresses.")
+			print("I) These IP addresses were not matched:")
+			for ip in addresslist.difference(matchset):
+				print("I) " + ip[1] + "/" + ip[2])
+		else:
+			print("I) Found all " + str(len(matchset)) + " IPs in the specified ASNs: " + ASN)
 
 if __name__=="__main__":
 	cli=optparse.OptionParser(usage="usage: %prog -f <IPFILE> [options...] <list of AS names / numbers> ...\n\nE.g.: %prog -f ips.txt AS286 'KPN B.V.' BlepTech ...")
